@@ -1,15 +1,25 @@
 # Create a RDS Database Instance
 resource "aws_db_instance" "myinstance" {
   allocated_storage      = 10
-  db_name                = local.db_name
-  identifier             = local.db_id
+  db_name                = local.envs.DB_NAME
+  identifier             = local.envs.DB_ID
   engine                 = "mysql"
   engine_version         = "5.7"
   instance_class         = "db.t3.micro"
-  username               = local.db_user
-  password               = local.db_password
+  username               = local.envs.DB_USER
+  password               = local.envs.DB_PASS
   skip_final_snapshot    = true
   vpc_security_group_ids = ["${aws_security_group.rds.id}"]
+  publicly_accessible    = true
+}
+
+data "aws_db_instance" "database" {
+  db_instance_identifier = local.envs.DB_ID
+  depends_on             = [aws_db_instance.myinstance]
+}
+
+output "rds_address" {
+  value = data.aws_db_instance.database.address
 }
 
 # Create a Lambda function
@@ -35,11 +45,10 @@ resource "aws_lambda_function" "lambda" {
 
   environment {
     variables = {
-        RDS_ID = local.db_id
-        RDS_HOST = local.db_host
-        DB_USER = local.db_user
-        DB_PASS = local.db_password
-        DB_NAME = local.db_name
+      RDS_HOST = data.aws_db_instance.database.address
+      DB_USER  = data.aws_db_instance.database.master_username
+      DB_PASS  = local.envs.DB_PASS
+      DB_NAME  = data.aws_db_instance.database.db_name
     }
   }
 }

@@ -6,8 +6,8 @@ import os
 
 
 # rds settings
-rds_host  = f"{os.environ['RDS_ID']}.{os.environ['RDS_HOST']}"
-user_name = os.environ['DB_USER']
+host  = os.environ['RDS_HOST']
+username = os.environ['DB_USER']
 password = os.environ['DB_PASS']
 db_name = os.environ['DB_NAME']
 
@@ -18,13 +18,11 @@ logger.setLevel(logging.INFO)
 # create the database connection outside of the handler to allow connections to be
 # re-used by subsequent function invocations.
 try:
-    conn = pymysql.connect(host=rds_host, user=user_name, passwd=password, db=db_name, connect_timeout=5)
+    conn = pymysql.connect(host=host, user=username, passwd=password, db=db_name, connect_timeout=5)
 except pymysql.MySQLError as e:
     logger.error("ERROR: Unexpected error: Could not connect to MySQL instance.")
     logger.error(e)
     sys.exit()
-
-logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 def lambda_handler(event, context):
     """
